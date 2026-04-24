@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../theme/app_theme.dart';
 import '../services/news_service.dart';
 
@@ -26,15 +28,33 @@ class _NewsScreenState extends State<NewsScreen> {
     _loadNews();
   }
 
+  // ───────── OPEN URL ─────────
+  Future<void> _openNews(String url) async {
+    if (url.isEmpty) return;
+
+    final uri = Uri.parse(url);
+
+    if (!await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw 'Could not launch $url';
+    }
+  }
+
+  // ───────── LOAD NEWS ─────────
   Future<void> _loadNews() async {
     setState(() {
       _isLoading = true;
       _error = null;
     });
+
     try {
       final result = await Connectivity().checkConnectivity();
       _isOffline = result == ConnectivityResult.none;
+
       final news = await _newsService.getNews();
+
       setState(() {
         _news = news;
         _isLoading = false;
@@ -47,6 +67,7 @@ class _NewsScreenState extends State<NewsScreen> {
     }
   }
 
+  // ───────── FILTER ─────────
   List<Map<String, dynamic>> get _filteredNews {
     if (_selectedCategory == 'All') return _news;
     return _news.where((n) => n['category'] == _selectedCategory).toList();
@@ -55,6 +76,7 @@ class _NewsScreenState extends State<NewsScreen> {
   int get _alertCount =>
       _news.where((n) => n['isAlert'] == true).length;
 
+  // ───────── HELPERS ─────────
   Color _colorFromString(String c) {
     switch (c) {
       case 'danger':
@@ -74,21 +96,16 @@ class _NewsScreenState extends State<NewsScreen> {
         return Icons.warning_amber_rounded;
       case 'bug':
         return Icons.bug_report;
-      case 'pharmacy':
-        return Icons.local_pharmacy;
       case 'eco':
         return Icons.eco;
-      case 'report':
-        return Icons.report_problem;
       case 'campaign':
         return Icons.campaign;
-      case 'event':
-        return Icons.event;
       default:
         return Icons.article;
     }
   }
 
+  // ───────── UI ─────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,6 +132,7 @@ class _NewsScreenState extends State<NewsScreen> {
     );
   }
 
+  // ───────── OFFLINE BANNER ─────────
   Widget _buildOfflineBanner() {
     return Container(
       width: double.infinity,
@@ -133,6 +151,7 @@ class _NewsScreenState extends State<NewsScreen> {
     );
   }
 
+  // ───────── ALERT BANNER ─────────
   Widget _buildAlertBanner() {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -146,28 +165,16 @@ class _NewsScreenState extends State<NewsScreen> {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.warning_amber_rounded,
-            color: AppColors.danger,
-            size: 24,
-          ),
+          const Icon(Icons.warning_amber_rounded,
+              color: AppColors.danger),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$_alertCount Active Alert${_alertCount > 1 ? 's' : ''} in Your Area',
-                  style: AppTextStyles.bodyText.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.danger,
-                  ),
-                ),
-                Text(
-                  'Stay alert and take preventive measures',
-                  style: AppTextStyles.caption,
-                ),
-              ],
+            child: Text(
+              '$_alertCount Active Alert${_alertCount > 1 ? 's' : ''} in Your Area',
+              style: AppTextStyles.bodyText.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.danger,
+              ),
             ),
           ),
         ],
@@ -175,6 +182,7 @@ class _NewsScreenState extends State<NewsScreen> {
     );
   }
 
+  // ───────── CATEGORY FILTER ─────────
   Widget _buildCategoryFilter() {
     return SizedBox(
       height: 44,
@@ -185,6 +193,7 @@ class _NewsScreenState extends State<NewsScreen> {
         itemBuilder: (context, index) {
           final category = _categories[index];
           final isSelected = _selectedCategory == category;
+
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
@@ -199,17 +208,12 @@ class _NewsScreenState extends State<NewsScreen> {
                       ? AppColors.primary
                       : AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : Colors.grey.shade300,
-                  ),
                 ),
                 child: Text(
                   category,
-                  style: AppTextStyles.bodyText.copyWith(
+                  style: TextStyle(
                     color: isSelected
-                        ? AppColors.textLight
+                        ? Colors.white
                         : AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
@@ -222,167 +226,155 @@ class _NewsScreenState extends State<NewsScreen> {
     );
   }
 
+  // ───────── BODY ─────────
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
+
     if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
-            const SizedBox(height: 12),
-            Text(
-              _error!,
-              style: const TextStyle(color: AppColors.danger),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: _loadNews,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
-            ),
-          ],
-        ),
-      );
+      return Center(child: Text(_error!));
     }
+
     if (_filteredNews.isEmpty) {
       return const Center(child: Text('No news available.'));
     }
+
     return RefreshIndicator(
       onRefresh: _loadNews,
-      color: AppColors.primary,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _filteredNews.length,
         itemBuilder: (context, index) =>
-            _buildNewsCard(_filteredNews[index]),
+            _buildNewsCard(_filteredNews[index], index),
       ),
     );
   }
 
-  Widget _buildNewsCard(Map<String, dynamic> news) {
-    final color = _colorFromString(news['color'] as String? ?? 'primary');
-    final icon = _iconFromString(news['icon'] as String? ?? 'article');
+  // ───────── PROFESSIONAL NEWS CARD ─────────
+  Widget _buildNewsCard(Map<String, dynamic> news, int index) {
+    final color = _colorFromString(news['color'] ?? 'primary');
+    final icon = _iconFromString(news['icon'] ?? 'article');
+    final imageUrl = news['image'] ?? '';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: news['isAlert'] == true
-            ? Border.all(color: color.withValues(alpha: 0.3))
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, color: color, size: 20),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (news['isAlert'] == true)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            '⚠ ALERT',
-                            style: AppTextStyles.caption.copyWith(
-                              color: color,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      Text(
-                        news['source'] as String? ?? '',
-                        style: AppTextStyles.caption,
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  news['date'] as String? ?? '',
-                  style: AppTextStyles.caption,
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              news['title'] as String? ?? '',
-              style: AppTextStyles.bodyText.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              news['description'] as String? ?? '',
-              style: AppTextStyles.bodyText,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    news['category'] as String? ?? '',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    'Read More →',
-                    style: TextStyle(color: AppColors.primary),
-                  ),
-                ),
-              ],
+    return TweenAnimationBuilder(
+      duration: Duration(milliseconds: 300 + (index * 60)),
+      tween: Tween<double>(begin: 0, end: 1),
+      builder: (context, double value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(opacity: value, child: child),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 5),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+
+              // IMAGE
+              if (imageUrl.isNotEmpty)
+                Image.network(
+                  imageUrl,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) =>
+                      Container(height: 180, color: Colors.grey),
+                ),
+
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    Row(
+                      children: [
+                        Icon(icon, color: color, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            news['source'] ?? '',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Text(news['date'] ?? ''),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Text(
+                      news['title'] ?? '',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Text(
+                      news['description'] ?? '',
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                      children: [
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(news['category'] ?? ''),
+                        ),
+
+                        TextButton(
+                          onPressed: (news['url'] ?? '')
+                                  .toString()
+                                  .isEmpty
+                              ? null
+                              : () =>
+                                  _openNews(news['url']),
+                          child: const Text('Read More →'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-} // end of _NewsScreenState
+}
