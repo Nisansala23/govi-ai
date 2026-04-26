@@ -22,6 +22,7 @@ dependencies:
   shared_preferences: ^2.3.0
   connectivity_plus: ^6.1.0
   url_launcher: ^6.3.2
+  xml: ^6.5.0
 
 dev_dependencies:
   flutter_test:
@@ -30,5 +31,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
   assets:
     - .env
+    - assets/images/img.jpg
