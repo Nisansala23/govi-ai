@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/farmer_chat_service.dart';
+import '../widgets/app_background.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -31,15 +32,15 @@ class _ChatScreenState extends State<ChatScreen> {
         messages.add({"role": "ai", "text": response});
       });
     } catch (e) {
-  print("CHAT ERROR: $e");
+      print("CHAT ERROR: $e");
 
-  setState(() {
-    messages.add({
-      "role": "ai",
-      "text": "Error: $e"
-    });
-  });
-}
+      setState(() {
+        messages.add({
+          "role": "ai",
+          "text": "Error: $e",
+        });
+      });
+    }
 
     setState(() {
       isLoading = false;
@@ -55,7 +56,9 @@ class _ChatScreenState extends State<ChatScreen> {
         margin: const EdgeInsets.symmetric(vertical: 6),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isUser ? Colors.green : Colors.grey.shade300,
+          color: isUser
+              ? Colors.green.withOpacity(0.8)
+              : Colors.white.withOpacity(0.85),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
@@ -73,44 +76,54 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Farmer AI Assistant 🌾"),
+        backgroundColor: Colors.green,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(12),
-              children: messages.map(buildMessage).toList(),
-            ),
-          ),
 
-          if (isLoading)
-            const Padding(
-              padding: EdgeInsets.all(8),
-              child: CircularProgressIndicator(),
+      body: AppBackground(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(12),
+                children: messages.map(buildMessage).toList(),
+              ),
             ),
 
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: "Ask about farming...",
-                      border: OutlineInputBorder(),
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: "Ask about farming...",
+                        hintStyle: const TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.black.withOpacity(0.4),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: sendMessage,
-                )
-              ],
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    onPressed: sendMessage,
+                  )
+                ],
+              ),
             ),
-          )
-        ],
+          ],
+        ),
       ),
     );
   }

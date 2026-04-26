@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../services/gemini_service.dart';
 import 'remedy_screen.dart';
+import '../widgets/app_background.dart';
+import '../widgets/ai_fab.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -39,10 +41,13 @@ class _ScannerScreenState extends State<ScannerScreen> {
       final result = await GeminiService.analyzeCropImageBytes(
         _selectedImageBytes!,
       );
+
       if (mounted) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => RemedyScreen(result: result)),
+          MaterialPageRoute(
+            builder: (context) => RemedyScreen(result: result),
+          ),
         );
       }
     } catch (e) {
@@ -62,28 +67,37 @@ class _ScannerScreenState extends State<ScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('AI Disease Scanner')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildCropSelector(),
-              const SizedBox(height: 20),
-              _buildImageArea(),
-              const SizedBox(height: 20),
-              _buildTips(),
-              const SizedBox(height: 20),
-              _buildActionButtons(),
-            ],
+      backgroundColor: Colors.transparent,
+
+      appBar: AppBar(
+        title: const Text('AI Disease Scanner'),
+        backgroundColor:  AppColors.primary,
+      ),
+
+  floatingActionButton: const AiFab(),
+      body: AppBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildCropSelector(),
+                const SizedBox(height: 20),
+                _buildImageArea(),
+                const SizedBox(height: 20),
+                _buildTips(),
+                const SizedBox(height: 20),
+                _buildActionButtons(),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  // ================= CROP SELECTOR =================
   Widget _buildCropSelector() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,6 +107,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
         Row(
           children: _crops.map((crop) {
             final isSelected = _selectedCrop == crop;
+
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
@@ -107,18 +122,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
                         ? AppColors.primary
                         : AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : Colors.grey.shade300,
-                    ),
                   ),
                   child: Text(
                     crop,
-                    style: AppTextStyles.bodyText.copyWith(
-                      color: isSelected
-                          ? AppColors.textLight
-                          : AppColors.textPrimary,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -131,6 +139,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
     );
   }
 
+  // ================= IMAGE AREA =================
   Widget _buildImageArea() {
     return GestureDetector(
       onTap: () => _pickImage(ImageSource.gallery),
@@ -138,17 +147,20 @@ class _ScannerScreenState extends State<ScannerScreen> {
         width: double.infinity,
         height: 250,
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
+          color: Colors.white.withOpacity(0.85),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: AppColors.primary.withOpacity(0.3),
             width: 2,
           ),
         ),
         child: _selectedImageBytes != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: Image.memory(_selectedImageBytes!, fit: BoxFit.cover),
+                child: Image.memory(
+                  _selectedImageBytes!,
+                  fit: BoxFit.cover,
+                ),
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -156,23 +168,18 @@ class _ScannerScreenState extends State<ScannerScreen> {
                   Icon(
                     Icons.camera_alt,
                     size: 60,
-                    color: AppColors.primary.withValues(alpha: 0.5),
+                    color: AppColors.primary.withOpacity(0.5),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'Tap to select crop image',
-                    style: AppTextStyles.bodyText,
-                  ),
-                  Text(
-                    'Works offline • No internet needed',
-                    style: AppTextStyles.caption,
-                  ),
+                  const Text('Tap to select crop image'),
+                  const Text('Works offline • No internet needed'),
                 ],
               ),
       ),
     );
   }
 
+  // ================= TIPS =================
   Widget _buildTips() {
     final tips = [
       'Good lighting',
@@ -184,28 +191,24 @@ class _ScannerScreenState extends State<ScannerScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
+        color: Colors.green.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Tips for Best Results', style: AppTextStyles.heading3),
+          const Text(
+            'Tips for Best Results',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           ...tips.map(
-            (tip) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle,
-                    color: AppColors.primary,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(tip, style: AppTextStyles.bodyText),
-                ],
-              ),
+            (tip) => Row(
+              children: [
+                const Icon(Icons.check, color: Colors.green, size: 16),
+                const SizedBox(width: 8),
+                Text(tip),
+              ],
             ),
           ),
         ],
@@ -213,6 +216,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
     );
   }
 
+  // ================= ACTION BUTTONS =================
   Widget _buildActionButtons() {
     return Column(
       children: [
@@ -221,16 +225,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => _pickImage(ImageSource.gallery),
-                icon: const Icon(Icons.photo_library),
+                icon: const Icon(Icons.photo),
                 label: const Text('Gallery'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.primary),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -239,12 +235,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 onPressed: () => _pickImage(ImageSource.camera),
                 icon: const Icon(Icons.camera_alt),
                 label: const Text('Camera'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
               ),
             ),
           ],
@@ -259,30 +249,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accent,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
             ),
             child: _isAnalyzing
-                ? const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: AppColors.textLight,
-                          strokeWidth: 2,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Text('Analyzing...', style: AppTextStyles.buttonText),
-                    ],
-                  )
-                : const Text(
-                    'Analyze Disease',
-                    style: AppTextStyles.buttonText,
-                  ),
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text('Analyze Disease'),
           ),
         ),
       ],
