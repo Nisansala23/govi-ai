@@ -70,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
 
       appBar: AppBar(
         title: const Text('My Profile'),
@@ -81,22 +81,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       floatingActionButton: const AiFab(),
 
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildProfileCard(name, district, phone),
-              const SizedBox(height: 20),
-              _buildStatsRow(totalScans, diseasesFound, healthyScans),
-              const SizedBox(height: 20),
-              _buildCropFields(),
-              const SizedBox(height: 20),
-              _buildScanHistory(scanHistory),
-              const SizedBox(height: 20),
-              _buildLogoutButton(),
-            ],
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/images/img.jpg"),
+            fit: BoxFit.cover,
+          ),
+        ),
+
+        child: Container(
+          color: Colors.black.withOpacity(0.35), 
+
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildProfileCard(name, district, phone),
+                  const SizedBox(height: 20),
+                  _buildStatsRow(totalScans, diseasesFound, healthyScans),
+                  const SizedBox(height: 20),
+                  _buildCropFields(),
+                  const SizedBox(height: 20),
+                  _buildScanHistory(scanHistory),
+                  const SizedBox(height: 20),
+                  _buildLogoutButton(),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -121,7 +134,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             backgroundColor: AppColors.textLight,
             child: Text(
               name.substring(0, 1).toUpperCase(),
-              style: AppTextStyles.heading1.copyWith(color: AppColors.primary),
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -130,13 +147,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name,
-                    style: AppTextStyles.heading3.copyWith(color: AppColors.textLight)),
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
                 Text('$district District',
-                    style: AppTextStyles.bodyText.copyWith(color: AppColors.textLight)),
+                    style: const TextStyle(color: Colors.white70)),
                 const SizedBox(height: 4),
                 Text(phone,
-                    style: AppTextStyles.bodyText.copyWith(color: AppColors.textLight)),
+                    style: const TextStyle(color: Colors.white70)),
               ],
             ),
           ),
@@ -148,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStatsRow(int totalScans, int diseasesFound, int healthyScans) {
     return Row(
       children: [
-        _buildStatCard('Total Scans', totalScans.toString(), Icons.camera_alt, AppColors.primary),
+        _buildStatCard('Total', totalScans.toString(), Icons.camera_alt, AppColors.primary),
         const SizedBox(width: 12),
         _buildStatCard('Diseases', diseasesFound.toString(), Icons.warning_amber, AppColors.danger),
         const SizedBox(width: 12),
@@ -162,14 +179,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
+          color: Colors.white.withOpacity(0.9),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           children: [
             Icon(icon, color: color, size: 28),
             const SizedBox(height: 8),
-            Text(value, style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(value,
+                style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
             Text(label),
           ],
         ),
@@ -177,13 +195,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildCropFields() {
-    return const SizedBox(); // unchanged (kept short for clarity)
-  }
+  Widget _buildCropFields() => const SizedBox();
 
-  Widget _buildScanHistory(List<Map<String, dynamic>> scanHistory) {
-    return const SizedBox(); // unchanged (kept short for clarity)
-  }
+  Widget _buildScanHistory(List<Map<String, dynamic>> scanHistory) =>
+      const SizedBox();
 
   Widget _buildLogoutButton() {
     return SizedBox(
