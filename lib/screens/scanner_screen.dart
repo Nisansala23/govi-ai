@@ -39,10 +39,17 @@ class _ScannerScreenState extends State<ScannerScreen> {
       final result = await GeminiService.analyzeCropImageBytes(
         _selectedImageBytes!,
       );
+
+      // ✅ Pass selectedCrop to RemedyScreen
       if (mounted) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => RemedyScreen(result: result)),
+          MaterialPageRoute(
+            builder: (context) => RemedyScreen(
+              result: result,
+              selectedCrop: _selectedCrop, // ✅ PASS CROP HERE
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -51,13 +58,16 @@ class _ScannerScreenState extends State<ScannerScreen> {
           SnackBar(
             content: Text('Error: $e'),
             backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } finally {
-      setState(() => _isAnalyzing = false);
+      if (mounted) setState(() => _isAnalyzing = false);
     }
   }
+
+  // ---- ALL OTHER WIDGETS STAY EXACTLY THE SAME ----
 
   @override
   Widget build(BuildContext context) {

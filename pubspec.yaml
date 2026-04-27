@@ -1,5 +1,5 @@
 name: govi_ai
-description: "A new Flutter project."
+description: "Govi-AI - Intelligent Crop Disease Detection System for Sri Lankan Farmers"
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -11,14 +11,32 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+
+  # Firebase
   firebase_core: ^4.6.0
   firebase_auth: ^6.3.0
   cloud_firestore: ^6.2.0
+  firebase_storage: ^13.3.0    # ✅ ADD - Profile picture upload
+
+  # Image
   image_picker: ^1.2.1
+
+  # Network
   http: ^1.6.0
+
+  # Environment
   flutter_dotenv: ^6.0.0
+
+  # Map
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
+
+  # Location
+  geolocator: ^13.0.1           # ✅ Already have
+
+  # Google Gemini AI
+  google_generative_ai: ^0.4.6  # ✅ ADD - if not already using
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:

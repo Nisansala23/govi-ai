@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' as ll;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -13,94 +15,154 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   Map<String, dynamic>? _selectedOutbreak;
+  List<Map<String, dynamic>> _outbreaks = [];
+  bool _isLoading = true;
 
-  final List<Map<String, dynamic>> _outbreaks = [
-    {
-      'id': 1,
-      'disease': 'Paddy Blast',
-      'crop': 'Paddy',
-      'district': 'Kurunegala',
-      'severity': 'High',
-      'reports': 12,
-      'date': 'Apr 4, 2026',
-      'lat': 7.4675,
-      'lng': 80.3647,
-      'color': AppColors.danger,
-    },
-    {
-      'id': 2,
-      'disease': 'Brown Planthopper',
-      'crop': 'Paddy',
-      'district': 'Anuradhapura',
-      'severity': 'Medium',
-      'reports': 8,
-      'date': 'Apr 3, 2026',
-      'lat': 8.3114,
-      'lng': 80.4037,
-      'color': AppColors.warning,
-    },
-    {
-      'id': 3,
-      'disease': 'Blister Blight',
-      'crop': 'Tea',
-      'district': 'Kandy',
-      'severity': 'Medium',
-      'reports': 6,
-      'date': 'Apr 2, 2026',
-      'lat': 7.2906,
-      'lng': 80.6337,
-      'color': AppColors.warning,
-    },
-    {
-      'id': 4,
-      'disease': 'Brown Spot',
-      'crop': 'Paddy',
-      'district': 'Polonnaruwa',
-      'severity': 'Low',
-      'reports': 3,
-      'date': 'Apr 1, 2026',
-      'lat': 7.9403,
-      'lng': 81.0188,
-      'color': AppColors.secondary,
-    },
-    {
-      'id': 5,
-      'disease': 'Tomato Blight',
-      'crop': 'Tomato',
-      'district': 'Nuwara Eliya',
-      'severity': 'High',
-      'reports': 9,
-      'date': 'Mar 31, 2026',
-      'lat': 6.9497,
-      'lng': 80.7891,
-      'color': AppColors.danger,
-    },
-    {
-      'id': 6,
-      'disease': 'Paddy Blast',
-      'crop': 'Paddy',
-      'district': 'Ampara',
-      'severity': 'Low',
-      'reports': 4,
-      'date': 'Mar 30, 2026',
-      'lat': 7.2980,
-      'lng': 81.6724,
-      'color': AppColors.secondary,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadOutbreaks();
+  }
+
+  // ✅ Get color based on severity
+  Color _getSeverityColor(String severity) {
+    switch (severity.toLowerCase()) {
+      case 'high':
+        return AppColors.danger;
+      case 'medium':
+      case 'moderate':
+        return AppColors.warning;
+      default:
+        return AppColors.secondary;
+    }
+  }
+
+  // ✅ Load REAL outbreaks from Firebase
+  Future<void> _loadOutbreaks() async {
+    setState(() => _isLoading = true);
+    try {
+      // Use AuthService.getOutbreaks() which reads from 'outbreaks' collection
+      final data = await AuthService.getOutbreaks();
+
+      // Add color based on severity
+      final outbreaksWithColor = data.map((outbreak) {
+        return {
+          ...outbreak,
+          'color': _getSeverityColor(outbreak['severity'] ?? 'low'),
+        };
+      }).toList();
+
+      setState(() {
+        _outbreaks = outbreaksWithColor;
+        _isLoading = false;
+      });
+
+      debugPrint('✅ Loaded ${_outbreaks.length} outbreaks from Firebase');
+    } catch (e) {
+      debugPrint('❌ Error loading outbreaks: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // ✅ Format Firestore timestamp
+  String _formatDate(dynamic date) {
+    if (date == null) return 'Unknown Date';
+    try {
+      final DateTime d = (date as Timestamp).toDate();
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      return '${months[d.month - 1]} ${d.day}, ${d.year}';
+    } catch (e) {
+      return 'Unknown Date';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Disease Outbreak Map')),
-      body: Stack(
-        children: [
-          _buildMap(),
-          _buildStatsBar(),
-          _buildLegend(),
-          if (_selectedOutbreak != null) _buildOutbreakCard(),
+      appBar: AppBar(
+        title: const Text('Disease Outbreak Map'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadOutbreaks,
+            tooltip: 'Refresh',
+          ),
         ],
+      ),
+      body: _isLoading
+          ? _buildLoading()
+          : Stack(
+              children: [
+                _buildMap(),
+                _buildStatsBar(),
+                _buildLegend(),
+                if (_outbreaks.isEmpty) _buildEmptyState(),
+                if (_selectedOutbreak != null) _buildOutbreakCard(),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildLoading() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: AppColors.primary),
+          const SizedBox(height: 16),
+          Text('Loading outbreak data...', style: AppTextStyles.bodyText),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              color: AppColors.secondary,
+              size: 48,
+            ),
+            const SizedBox(height: 12),
+            Text('No Active Outbreaks', style: AppTextStyles.heading3),
+            const SizedBox(height: 8),
+            Text(
+              'No disease outbreaks reported yet.\nScan crops to add to community map!',
+              style: AppTextStyles.caption,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -120,11 +182,11 @@ class _MapScreenState extends State<MapScreen> {
         ),
         MarkerLayer(
           markers: _outbreaks.map((outbreak) {
+            final double lat = (outbreak['lat'] as num?)?.toDouble() ?? 7.8731;
+            final double lng = (outbreak['lng'] as num?)?.toDouble() ?? 80.7718;
+
             return Marker(
-              point: ll.LatLng(
-                outbreak['lat'] as double,
-                outbreak['lng'] as double,
-              ),
+              point: ll.LatLng(lat, lng),
               width: 44,
               height: 44,
               child: GestureDetector(
@@ -144,14 +206,11 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     ],
                   ),
-                  child: Center(
-                    child: Text(
-                      '${outbreak['reports']}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.bug_report,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
                 ),
@@ -164,6 +223,11 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildStatsBar() {
+    final highRisk = _outbreaks
+        .where((o) => (o['severity'] ?? '').toString().toLowerCase() == 'high')
+        .length;
+    final districts = _outbreaks.map((o) => o['district']).toSet().length;
+
     return Positioned(
       top: 16,
       left: 16,
@@ -189,16 +253,8 @@ class _MapScreenState extends State<MapScreen> {
               '${_outbreaks.length}',
               AppColors.primary,
             ),
-            _buildStatItem(
-              'High Risk',
-              '${_outbreaks.where((o) => o['severity'] == 'High').length}',
-              AppColors.danger,
-            ),
-            _buildStatItem(
-              'Districts',
-              '${_outbreaks.map((o) => o['district']).toSet().length}',
-              AppColors.warning,
-            ),
+            _buildStatItem('High Risk', '$highRisk', AppColors.danger),
+            _buildStatItem('Districts', '$districts', AppColors.warning),
           ],
         ),
       ),
@@ -264,6 +320,8 @@ class _MapScreenState extends State<MapScreen> {
 
   Widget _buildOutbreakCard() {
     final outbreak = _selectedOutbreak!;
+    final color = outbreak['color'] as Color;
+
     return Positioned(
       bottom: 16,
       left: 16,
@@ -289,14 +347,10 @@ class _MapScreenState extends State<MapScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: (outbreak['color'] as Color).withValues(alpha: 0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    Icons.bug_report,
-                    color: outbreak['color'] as Color,
-                    size: 24,
-                  ),
+                  child: Icon(Icons.bug_report, color: color, size: 24),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -304,11 +358,12 @@ class _MapScreenState extends State<MapScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        outbreak['disease'] as String,
+                        outbreak['disease'] ?? 'Unknown Disease',
                         style: AppTextStyles.heading3,
                       ),
                       Text(
-                        '${outbreak['crop']} • ${outbreak['district']} District',
+                        '${outbreak['crop'] ?? 'Unknown'} • '
+                        '${outbreak['district'] ?? 'Unknown'} District',
                         style: AppTextStyles.caption,
                       ),
                     ],
@@ -324,16 +379,11 @@ class _MapScreenState extends State<MapScreen> {
             Row(
               children: [
                 _buildInfoChip(
-                  'Severity: ${outbreak['severity']}',
-                  outbreak['color'] as Color,
+                  'Severity: ${outbreak['severity'] ?? 'Unknown'}',
+                  color,
                 ),
                 const SizedBox(width: 8),
-                _buildInfoChip(
-                  '${outbreak['reports']} Reports',
-                  AppColors.primary,
-                ),
-                const SizedBox(width: 8),
-                _buildInfoChip(outbreak['date'] as String, Colors.grey),
+                _buildInfoChip(_formatDate(outbreak['date']), Colors.grey),
               ],
             ),
           ],
