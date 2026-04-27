@@ -16,49 +16,67 @@ class RemedyScreen extends StatelessWidget {
     final organicRemedy = result['organic_remedy'] ?? '';
     final chemicalRemedy = result['chemical_remedy'] ?? '';
     final severity = result['severity'] ?? 'None';
+
     final isHealthy = disease.toLowerCase() == 'healthy';
+
+    final Color statusColor =
+        isHealthy ? AppColors.healthy : AppColors.danger;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Diagnosis Result')),
+      appBar: AppBar(
+        title: const Text('Diagnosis Result'),
+      ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildResultHeader(
+              _buildHeader(
                 disease,
-                confidence,
                 crop,
+                confidence,
                 severity,
                 isHealthy,
+                statusColor,
               ),
+
               const SizedBox(height: 16),
-              _buildInfoCard('About Disease', description, Icons.info_outline),
+
+              _buildCard(
+                "About Disease",
+                description,
+                Icons.info_outline,
+              ),
+
               const SizedBox(height: 12),
-              _buildInfoCard('Sinhala උපදෙස්', sinhalaRemedy, Icons.language),
+
+              _buildCard(
+                "Sinhala උපදෙස්",
+                sinhalaRemedy,
+                Icons.language,
+              ),
+
               const SizedBox(height: 12),
-              _buildRemedyCard(
-                'Organic Treatment',
+
+              _buildRemedy(
+                "Organic Treatment",
                 organicRemedy,
                 AppColors.healthy,
               ),
+
               const SizedBox(height: 12),
-              _buildRemedyCard(
-                'Chemical Treatment',
+
+              _buildRemedy(
+                "Chemical Treatment",
                 chemicalRemedy,
                 AppColors.warning,
               ),
+
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text('Scan Another'),
-                ),
-              ),
+
+              _buildActionButtons(context),
             ],
           ),
         ),
@@ -66,45 +84,59 @@ class RemedyScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildResultHeader(
+  // ───────────────── HEADER ─────────────────
+
+  Widget _buildHeader(
     String disease,
-    String confidence,
     String crop,
+    String confidence,
     String severity,
     bool isHealthy,
+    Color color,
   ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isHealthy ? AppColors.healthy : AppColors.danger,
+        color: color,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
           Icon(
-            isHealthy ? Icons.check_circle : Icons.warning_amber_rounded,
-            color: AppColors.textLight,
+            isHealthy
+                ? Icons.check_circle
+                : Icons.warning_amber_rounded,
+            color: Colors.white,
             size: 48,
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 10),
+
           Text(
             disease,
-            style: AppTextStyles.heading2.copyWith(color: AppColors.textLight),
             textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-          const SizedBox(height: 8),
+
+          const SizedBox(height: 6),
+
           Text(
-            'Crop: $crop',
-            style: AppTextStyles.bodyText.copyWith(color: AppColors.textLight),
+            "Crop: $crop",
+            style: const TextStyle(color: Colors.white70),
           ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+
+          const SizedBox(height: 10),
+
+          Wrap(
+            spacing: 8,
             children: [
-              _buildBadge('Confidence: $confidence'),
-              const SizedBox(width: 8),
-              if (!isHealthy) _buildBadge('Severity: $severity'),
+              _badge("Confidence: $confidence"),
+              if (!isHealthy) _badge("Severity: $severity"),
             ],
           ),
         ],
@@ -112,21 +144,29 @@ class RemedyScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBadge(String text) {
+  // ───────────────── BADGE ─────────────────
+
+  Widget _badge(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         text,
-        style: AppTextStyles.caption.copyWith(color: AppColors.textLight),
+        style: const TextStyle(color: Colors.white, fontSize: 12),
       ),
     );
   }
 
-  Widget _buildInfoCard(String title, String content, IconData icon) {
+  // ───────────────── CARD ─────────────────
+
+  Widget _buildCard(String title, String content, IconData icon) {
+    if (content.isEmpty) {
+      return const SizedBox();
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -139,35 +179,87 @@ class RemedyScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: AppColors.primary, size: 20),
+              Icon(icon, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text(title, style: AppTextStyles.heading3),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(content, style: AppTextStyles.bodyText),
+          Text(content),
         ],
       ),
     );
   }
 
-  Widget _buildRemedyCard(String title, String content, Color color) {
+  // ───────────────── REMEDY CARD ─────────────────
+
+  Widget _buildRemedy(String title, String content, Color color) {
+    if (content.isEmpty) return const SizedBox();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: AppTextStyles.heading3.copyWith(color: color)),
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(content, style: AppTextStyles.bodyText),
+          Text(content),
         ],
       ),
+    );
+  }
+
+  // ───────────────── ACTION BUTTONS ─────────────────
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.camera_alt),
+            label: const Text("Scan Another"),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              // future: save result to Firestore for stats
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Result saved (future feature)"),
+                ),
+              );
+            },
+            icon: const Icon(Icons.save),
+            label: const Text("Save Result"),
+          ),
+        ),
+      ],
     );
   }
 }
