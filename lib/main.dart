@@ -9,6 +9,7 @@ import 'screens/news_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
+import 'screens/farming_calendar_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +48,7 @@ class _MainNavigationState extends State<MainNavigation> {
     const MapScreen(),
     const NewsScreen(),
     const ProfileScreen(),
+    const FarmingCalendarScreen(),
   ];
 
   @override
@@ -65,7 +67,12 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Disease Map'),
           BottomNavigationBarItem(icon: Icon(Icons.newspaper), label: 'News'),
+
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month),
+            label: 'Calendar',
+          ),
         ],
       ),
     );
