@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../theme/app_theme.dart';
 import '../services/gemini_service.dart';
 import 'remedy_screen.dart';
@@ -17,21 +18,28 @@ class ScannerScreen extends StatefulWidget {
 class _ScannerScreenState extends State<ScannerScreen> {
   Uint8List? _selectedImageBytes;
   bool _isAnalyzing = false;
+
   String _selectedCrop = 'Paddy';
   final List<String> _crops = ['Paddy', 'Tea', 'Tomato'];
+
   final ImagePicker _picker = ImagePicker();
 
+  // ───────── PICK IMAGE ─────────
   Future<void> _pickImage(ImageSource source) async {
     final XFile? image = await _picker.pickImage(
       source: source,
       imageQuality: 80,
     );
+
     if (image != null) {
       final bytes = await image.readAsBytes();
-      setState(() => _selectedImageBytes = bytes);
+      setState(() {
+        _selectedImageBytes = bytes;
+      });
     }
   }
 
+  // ───────── ANALYZE IMAGE ─────────
   Future<void> _analyzeImage() async {
     if (_selectedImageBytes == null) return;
 
@@ -42,35 +50,22 @@ class _ScannerScreenState extends State<ScannerScreen> {
         _selectedImageBytes!,
       );
 
-      // ✅ Pass selectedCrop to RemedyScreen
       if (mounted) {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => RemedyScreen(
-              result: result,
-              selectedCrop: _selectedCrop, // ✅ PASS CROP HERE
-            ),
-          ),
+          MaterialPageRoute(builder: (context) => RemedyScreen(result: result)),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppColors.danger,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e"), backgroundColor: AppColors.danger),
+      );
     } finally {
-      if (mounted) setState(() => _isAnalyzing = false);
+      setState(() => _isAnalyzing = false);
     }
   }
 
-  // ---- ALL OTHER WIDGETS STAY EXACTLY THE SAME ----
-
+  // ───────── UI ─────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,6 +77,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
       ),
 
       floatingActionButton: const AiFab(),
+
       body: AppBackground(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -104,123 +100,106 @@ class _ScannerScreenState extends State<ScannerScreen> {
     );
   }
 
-  // ================= CROP SELECTOR =================
+  // ───────── CROP SELECTOR ─────────
   Widget _buildCropSelector() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Select Crop Type', style: AppTextStyles.heading3),
-        const SizedBox(height: 12),
+        const Text(
+          "Select Crop Type",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
         Row(
-          children: _crops.map((crop) {
-            final isSelected = _selectedCrop == crop;
+          children:
+              _crops.map((crop) {
+                final isSelected = _selectedCrop == crop;
 
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedCrop = crop),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.cardBackground,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    crop,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black,
-                      fontWeight: FontWeight.w600,
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () => setState(() => _selectedCrop = crop),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            isSelected
+                                ? AppColors.primary
+                                : Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        crop,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.black,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            );
-          }).toList(),
+                );
+              }).toList(),
         ),
       ],
     );
   }
 
-  // ================= IMAGE AREA =================
+  // ───────── IMAGE AREA ─────────
   Widget _buildImageArea() {
     return GestureDetector(
       onTap: () => _pickImage(ImageSource.gallery),
       child: Container(
-        width: double.infinity,
         height: 250,
+        width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.85),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppColors.primary.withOpacity(0.3),
-            width: 2,
-          ),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
         ),
-        child: _selectedImageBytes != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Image.memory(_selectedImageBytes!, fit: BoxFit.cover),
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.camera_alt,
-                    size: 60,
-                    color: AppColors.primary.withOpacity(0.5),
+        child:
+            _selectedImageBytes != null
+                ? ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.memory(_selectedImageBytes!, fit: BoxFit.cover),
+                )
+                : const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.camera_alt, size: 50),
+                      SizedBox(height: 10),
+                      Text("Tap to select crop image"),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  const Text('Tap to select crop image'),
-                  const Text('Works offline • No internet needed'),
-                ],
-              ),
+                ),
       ),
     );
   }
 
-  // ================= TIPS =================
+  // ───────── TIPS ─────────
   Widget _buildTips() {
-    final tips = [
-      'Good lighting',
-      'Focus on diseased area',
-      'Hold camera steady',
-      'Fill frame with leaf',
-    ];
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.green.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Tips for Best Results',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          ...tips.map(
-            (tip) => Row(
-              children: [
-                const Icon(Icons.check, color: Colors.green, size: 16),
-                const SizedBox(width: 8),
-                Text(tip),
-              ],
-            ),
-          ),
+          Text("Tips:", style: TextStyle(fontWeight: FontWeight.bold)),
+          SizedBox(height: 6),
+          Text("• Use good lighting"),
+          Text("• Focus on affected area"),
+          Text("• Keep camera steady"),
         ],
       ),
     );
   }
 
-  // ================= ACTION BUTTONS =================
+  // ───────── BUTTONS ─────────
   Widget _buildActionButtons() {
     return Column(
       children: [
@@ -230,33 +209,32 @@ class _ScannerScreenState extends State<ScannerScreen> {
               child: OutlinedButton.icon(
                 onPressed: () => _pickImage(ImageSource.gallery),
                 icon: const Icon(Icons.photo),
-                label: const Text('Gallery'),
+                label: const Text("Gallery"),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
-              child: ElevatedButton.icon(
+              child: OutlinedButton.icon(
                 onPressed: () => _pickImage(ImageSource.camera),
                 icon: const Icon(Icons.camera_alt),
-                label: const Text('Camera'),
+                label: const Text("Camera"),
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
+
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: _selectedImageBytes == null || _isAnalyzing
-                ? null
-                : _analyzeImage,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            child: _isAnalyzing
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('Analyze Disease'),
+            onPressed:
+                _selectedImageBytes == null || _isAnalyzing
+                    ? null
+                    : _analyzeImage,
+            child:
+                _isAnalyzing
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Analyze Disease"),
           ),
         ),
       ],

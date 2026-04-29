@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.7.2
 
 dependencies:
   flutter:
@@ -16,13 +16,14 @@ dependencies:
   firebase_core: ^4.6.0
   firebase_auth: ^6.3.0
   cloud_firestore: ^6.2.0
-  firebase_storage: ^13.3.0    # ✅ ADD - Profile picture upload
+  firebase_storage: 13.3.0   # ✅ Fixed version
 
   # Image
   image_picker: ^1.2.1
 
   # Network
   http: ^1.6.0
+  xml: ^6.5.0
 
   # Environment
   flutter_dotenv: ^6.0.0
@@ -30,17 +31,24 @@ dependencies:
   # Map
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
-  shared_preferences: ^2.3.0
-  connectivity_plus: ^6.1.0
-  url_launcher: ^6.3.2
-  xml: ^6.5.0
-  table_calendar: ^3.0.9
 
   # Location
-  geolocator: ^13.0.1           # ✅ Already have
+  geolocator: ^13.0.1
 
-  # Google Gemini AI
-  google_generative_ai: ^0.4.6  # ✅ ADD - if not already using
+  # Calendar
+  table_calendar: ^3.0.9
+
+  # Storage & Connectivity
+  shared_preferences: ^2.3.0
+  connectivity_plus: ^6.1.0
+
+  # URL & Links
+  url_launcher: ^6.3.2        # ✅ Only once!
+
+  # AI
+  google_generative_ai: ^0.4.6
+
+  # Security
   crypto: ^3.0.7
 
 dev_dependencies:
@@ -50,7 +58,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
   assets:
     - .env
     - assets/images/img.jpg

@@ -3,7 +3,7 @@ import '../services/auth_service.dart';
 import '../services/weather_service.dart';
 import 'scanner_screen.dart';
 import 'map_screen.dart';
-import 'profile_screen.dart'; // add if you have this
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -49,15 +49,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ✅ Navigate to Scanner
   void _goToScanner() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const ScannerScreen()),
-    ).then((_) => _loadData()); // Refresh after scan
+    ).then((_) => _loadData());
   }
 
-  // ✅ Navigate to Map
   void _goToMap() {
     Navigator.push(
       context,
@@ -80,7 +78,8 @@ class _HomeScreenState extends State<HomeScreen> {
         color: const Color(0xFF2E7D32),
         child: CustomScrollView(
           slivers: [
-            _buildAppBar(name, district),
+            // ✅ Pass context here to open drawer
+            _buildAppBar(context, name, district),
             SliverToBoxAdapter(
               child: _isLoading
                   ? const SizedBox(
@@ -118,7 +117,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAppBar(String name, String district) {
+  // ✅ Added BuildContext parameter
+  Widget _buildAppBar(BuildContext context, String name, String district) {
     final initial = name.isNotEmpty ? name[0].toUpperCase() : 'F';
 
     return SliverAppBar(
@@ -126,6 +126,8 @@ class _HomeScreenState extends State<HomeScreen> {
       floating: false,
       pinned: true,
       backgroundColor: const Color(0xFF2E7D32),
+      // Prevent automatic back button from showing up weirdly
+      automaticallyImplyLeading: false,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: const BoxDecoration(
@@ -145,21 +147,27 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.eco,
-                          color: Colors.white,
-                          size: 24,
+                      // ✅ CHANGED: Clickable Menu (Hamburger) Button
+                      GestureDetector(
+                        onTap: () {
+                          // Opens the drawer from main.dart!
+                          Scaffold.of(context).openDrawer();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.menu, // changed from eco to menu
+                            color: Colors.white,
+                            size: 26,
+                          ),
                         ),
                       ),
                       Row(
                         children: [
-                          // ✅ Notification bell - shows outbreak count
                           Stack(
                             children: [
                               IconButton(
@@ -204,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const Text(
-                    'සුභ පැමිණීම / Welcome',
+                    'ආයුබෝවන් / Welcome',
                     style: TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                   Text(
@@ -343,10 +351,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ✅ FIXED - Scan button now navigates!
   Widget _buildScanButton() {
     return GestureDetector(
-      onTap: _goToScanner, // ✅ FIXED
+      onTap: _goToScanner,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
@@ -416,14 +423,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ✅ FIXED - Alert banner navigates to map
   Widget _buildAlertBanner() {
     final firstOutbreak = _outbreaks.first;
     final disease = firstOutbreak['disease'] ?? 'Disease';
     final district = firstOutbreak['district'] ?? 'Unknown';
 
     return GestureDetector(
-      onTap: _goToMap, // ✅ FIXED
+      onTap: _goToMap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -566,7 +572,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(height: 50, width: 1, color: Colors.grey[200]);
   }
 
-  // ✅ FIXED - View All navigates to profile scan history
   Widget _buildRecentActivity() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,7 +596,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             TextButton(
               onPressed: () {
-                // ✅ Navigate to profile page scan history tab
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -665,7 +669,6 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 12),
-          // ✅ Quick scan button in empty state
           ElevatedButton.icon(
             onPressed: _goToScanner,
             icon: const Icon(Icons.camera_alt, size: 16),
@@ -725,7 +728,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Color(0xFF1A1A1A),
                   ),
                 ),
-                // ✅ Show crop + district
                 Text(
                   district.isNotEmpty
                       ? '${crop.toUpperCase()} • $district'
@@ -763,7 +765,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ✅ FIXED - View Full Map button works
   Widget _buildNearbyOutbreaks() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -844,7 +845,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                // ✅ Show recent outbreak names
                 if (_outbreaks.isNotEmpty)
                   Positioned(
                     top: 50,
@@ -894,7 +894,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: _goToMap, // ✅ FIXED
+                          onTap: _goToMap,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -968,10 +968,6 @@ class _InfoCard extends StatelessWidget {
     );
   }
 }
-
-////////////////////////////////////////////////////////////
-/// TIP
-////////////////////////////////////////////////////////////
 
 class _TipCard extends StatelessWidget {
   const _TipCard();
