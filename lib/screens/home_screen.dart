@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_background.dart';
+import '../widgets/ai_fab.dart'; // ✅ reusable AI button
+import 'scanner_screen.dart';
+import 'map_screen.dart';
+import 'chat_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -7,254 +12,386 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 24),
-              _buildScanButton(context),
-              const SizedBox(height: 24),
-              _buildQuickActions(context),
-              const SizedBox(height: 24),
-              _buildRecentActivity(),
-            ],
+      backgroundColor: Colors.transparent,
+
+      // ✅ AI FLOATING BUTTON
+      floatingActionButton: const AiFab(),
+
+      body: AppBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: const [
+                _Header(),
+                SizedBox(height: 20),
+                _WeatherCard(),
+                SizedBox(height: 20),
+                _ScanCard(),
+                SizedBox(height: 20),
+                _QuickActions(),
+                SizedBox(height: 20),
+
+                // ✅ NEW SECTION (added properly)
+                _LastScanCard(),
+                SizedBox(height: 20),
+                _MarketCard(),
+                SizedBox(height: 20),
+
+                _DashboardRow(),
+                SizedBox(height: 20),
+                _TipCard(),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildHeader() {
+////////////////////////////////////////////////////////////
+/// HEADER
+////////////////////////////////////////////////////////////
+
+class _Header extends StatelessWidget {
+  const _Header();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 24,
+          backgroundColor: Colors.white.withOpacity(0.6),
+          child: const Icon(Icons.person),
+        ),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Good Morning 👋",
+                  style: TextStyle(fontSize: 14, color: Colors.black54)),
+              Text("Farmer Dashboard",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+
+        // Notification
+        Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.5),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.notifications_none),
+                onPressed: () {},
+              ),
+            ),
+            Positioned(
+              right: 6,
+              top: 6,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            )
+          ],
+        )
+      ],
+    );
+  }
+}
+
+////////////////////////////////////////////////////////////
+/// WEATHER
+////////////////////////////////////////////////////////////
+
+class _WeatherCard extends StatelessWidget {
+  const _WeatherCard();
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryLight],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [AppColors.primary, Colors.green],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const CircleAvatar(
-            radius: 28,
-            backgroundColor: AppColors.textLight,
-            child: Icon(Icons.person, color: AppColors.primary, size: 32),
-          ),
-          const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Welcome, Farmer!',
-                style: AppTextStyles.heading3.copyWith(
-                  color: AppColors.textLight,
-                ),
-              ),
-              Text(
-                'Kurunegala District',
-                style: AppTextStyles.bodyText.copyWith(
-                  color: AppColors.textLight.withOpacity(0.8),
-                ),
-              ),
+              Text("28°C",
+                  style: TextStyle(
+                      fontSize: 30,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold)),
+              Text("Partly Cloudy",
+                  style: TextStyle(color: Colors.white70)),
             ],
           ),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: AppColors.textLight,
-            ),
-            onPressed: () {},
-          ),
+          Icon(Icons.cloud, size: 40, color: Colors.white70)
         ],
       ),
     );
   }
+}
 
-  Widget _buildScanButton(BuildContext context) {
+////////////////////////////////////////////////////////////
+/// SCAN CARD
+////////////////////////////////////////////////////////////
+
+class _ScanCard extends StatelessWidget {
+  const _ScanCard();
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ScannerScreen()),
+        );
+      },
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppColors.accent,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.accent.withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: Colors.orange.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: const Row(
           children: [
-            const Icon(Icons.camera_alt, color: AppColors.textLight, size: 28),
-            const SizedBox(width: 12),
-            Text(
-              'Scan Crop Disease',
-              style: AppTextStyles.buttonText.copyWith(fontSize: 18),
+            Icon(Icons.camera_alt, color: Colors.white, size: 28),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                "Scan Crop Disease",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
+              ),
             ),
+            Icon(Icons.arrow_forward, color: Colors.white70)
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildQuickActions(BuildContext context) {
-    final actions = [
-      {'icon': Icons.map, 'label': 'Disease Map', 'color': AppColors.primary},
-      {'icon': Icons.chat, 'label': 'Ask Expert', 'color': AppColors.secondary},
-      {'icon': Icons.bar_chart, 'label': 'My Crops', 'color': AppColors.accent},
-      {
-        'icon': Icons.warning_amber,
-        'label': 'Alerts',
-        'color': AppColors.danger,
-      },
-    ];
+////////////////////////////////////////////////////////////
+/// QUICK ACTIONS
+////////////////////////////////////////////////////////////
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('Quick Actions', style: AppTextStyles.heading3),
-        const SizedBox(height: 12),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.5,
-          ),
-          itemCount: actions.length,
-          itemBuilder: (context, index) {
-            final action = actions[index];
-            return GestureDetector(
-              onTap: () {},
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      action['icon'] as IconData,
-                      color: action['color'] as Color,
-                      size: 32,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      action['label'] as String,
-                      style: AppTextStyles.bodyText.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+        _Action(
+            icon: Icons.map,
+            label: "Map",
+            onTap: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const MapScreen()))),
+        _Action(
+            icon: Icons.chat,
+            label: "AI",
+            onTap: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const ChatScreen()))),
+        _Action(icon: Icons.bar_chart, label: "Crops", onTap: () {}),
+        _Action(icon: Icons.warning, label: "Alerts", onTap: () {}),
       ],
     );
   }
+}
 
-  Widget _buildRecentActivity() {
-    final activities = [
-      {
-        'crop': 'Tea',
-        'disease': 'Blister Blight',
-        'days': '2 days ago',
-        'color': AppColors.danger,
-      },
-      {
-        'crop': 'Paddy',
-        'disease': 'Healthy',
-        'days': '5 days ago',
-        'color': AppColors.healthy,
-      },
-    ];
+class _Action extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Recent Activity', style: AppTextStyles.heading3),
-        const SizedBox(height: 12),
-        ...activities.map(
-          (activity) => Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(12),
+  const _Action({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              color: Colors.white.withOpacity(0.6),
+              shape: BoxShape.circle,
             ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: (activity['color'] as Color).withOpacity(
-                    0.15,
-                  ),
-                  child: Icon(
-                    Icons.eco,
-                    color: activity['color'] as Color,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${activity['crop']} - ${activity['disease']}',
-                      style: AppTextStyles.bodyText.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      activity['days'] as String,
-                      style: AppTextStyles.caption,
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 14,
-                  color: Colors.grey,
-                ),
-              ],
-            ),
+            child: Icon(icon,
+                size: 24, color: Colors.black.withOpacity(0.7)),
           ),
-        ),
+          const SizedBox(height: 6),
+          Text(label, style: const TextStyle(fontSize: 12))
+        ],
+      ),
+    );
+  }
+}
+
+////////////////////////////////////////////////////////////
+/// LAST SCAN
+////////////////////////////////////////////////////////////
+
+class _LastScanCard extends StatelessWidget {
+  const _LastScanCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.eco, size: 40, color: Colors.green),
+          SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Last Scan", style: TextStyle(color: Colors.black54)),
+              Text("Tea - Blister Blight",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+}
+
+////////////////////////////////////////////////////////////
+/// MARKET CARD
+////////////////////////////////////////////////////////////
+
+class _MarketCard extends StatelessWidget {
+  const _MarketCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Market Prices",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          SizedBox(height: 8),
+          Text("Paddy: Rs.120 ↑"),
+          Text("Tomato: Rs.180 ↓"),
+        ],
+      ),
+    );
+  }
+}
+
+////////////////////////////////////////////////////////////
+/// DASHBOARD
+////////////////////////////////////////////////////////////
+
+class _DashboardRow extends StatelessWidget {
+  const _DashboardRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: const [
+        Expanded(child: _InfoCard(title: "Alerts", value: "2 Issues")),
+        SizedBox(width: 12),
+        Expanded(child: _InfoCard(title: "Health", value: "Good")),
       ],
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final String title;
+  final String value;
+
+  const _InfoCard({required this.title, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: const TextStyle(fontSize: 12, color: Colors.black54)),
+          const SizedBox(height: 6),
+          Text(value,
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
+////////////////////////////////////////////////////////////
+/// TIP
+////////////////////////////////////////////////////////////
+
+class _TipCard extends StatelessWidget {
+  const _TipCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.lightbulb, color: Colors.green),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              "Tip: Water crops early morning for best absorption.",
+            ),
+          )
+        ],
+      ),
     );
   }
 }
