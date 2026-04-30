@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
 
   # Firebase
   firebase_core: ^4.6.0
@@ -60,4 +61,4 @@ flutter:
   uses-material-design: true
   assets:
     - .env
-    - assets/images/img.jpg
+    - assets/images/farm_bg.jpg

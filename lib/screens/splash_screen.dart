@@ -67,8 +67,9 @@ class _SplashScreenState extends State<SplashScreen>
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              user != null ? const MainNavigation() : const LoginScreen(),
+          pageBuilder:
+              (context, animation, secondaryAnimation) =>
+                  user != null ? const MainNavigation() : const LoginScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -282,9 +283,10 @@ class _SplashScreenState extends State<SplashScreen>
 class _CirclePatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.03)
-      ..style = PaintingStyle.fill;
+    final paint =
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.03)
+          ..style = PaintingStyle.fill;
 
     canvas.drawCircle(
       Offset(size.width * 0.8, size.height * 0.1),
